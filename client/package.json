@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "ajax": "^0.0.4",
+    "browserify": "^17.0.0",
+    "express": "^4.17.3",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "multer": "^1.4.4",
+    "recordrtc": "^5.6.2"
+  }
+}
