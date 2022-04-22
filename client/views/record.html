@@ -1,0 +1,29 @@
+{{extend './template.html'}}
+
+{{block 'title'}}Record{{/block}}
+
+{{block 'content'}}
+<section id="features">
+    {{ if sessionUser }}
+    <div class="display-5 mb-3 text-center p-5">
+        You are in the exam
+        <button class="btn btn-warning btn-lg">
+            {{ sessionUser.exam }}
+        </button>
+    </div>
+    {{ /if }}
+    <div class="container-fluid text-center p-5">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-start-recording">Start Recording</button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-stop-recording" disabled>Stop
+                Recording</button>
+        </div>
+    </div>
+</section>
+{{/block}}
+
+{{block 'script'}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../node_modules/recordrtc/RecordRTC.js"></script>
+<script src="../controller.js"></script>
+{{/block}}

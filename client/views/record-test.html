@@ -1,0 +1,26 @@
+{{extend './template.html'}}
+
+{{block 'title'}}Test{{/block}}
+
+{{block 'content'}}
+<section id="features">
+    <div class="display-5 mb-3 text-center p-5">You are in the test</div>
+    <div class="container-fluid text-center p-5">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-start-recording">Start Recording</button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-stop-recording" disabled>Stop
+                Recording</button>
+        </div>
+    </div>
+    <div class="container-fluid text-center p-5">
+        <video width="400" height="225" id="screen" muted controls autoplay playsinline></video>
+        <video width="400" height="300" id="camera" muted controls autoplay playsinline></video>
+    </div>
+</section>
+{{/block}}
+
+{{block 'script'}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../node_modules/recordrtc/RecordRTC.js"></script>
+<script src="../controller-test.js"></script>
+{{/block}}

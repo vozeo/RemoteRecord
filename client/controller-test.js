@@ -1,5 +1,10 @@
+let screenVideo = document.getElementById('screen');
+let cameraVideo = document.getElementById('camera');
+
 if (!navigator.getDisplayMedia && !navigator.mediaDevices.getDisplayMedia) {
-    var error = 'Your browser does NOT support the getDisplayMedia API.';
+    let error = 'Your browser does NOT support the getDisplayMedia API.';
+    document.getElementById('screen').style.display = 'none';
+    document.getElementById('camera').style.display = 'none';
     document.getElementById('btn-start-recording').style.display = 'none';
     document.getElementById('btn-stop-recording').style.display = 'none';
     throw new Error(error);
@@ -14,7 +19,6 @@ function invokeGetDisplayMedia(success, error) {
             frameRate: { ideal: 15 }
         }
     };
-
     if (navigator.mediaDevices.getDisplayMedia) {
         navigator.mediaDevices.getDisplayMedia(displaymediastreamconstraints).then(success).catch(error);
     }
@@ -44,50 +48,20 @@ function captureCamera(callback) {
     });
 }
 
-let screenCnt = 0;
-function uploadScreenVideo(blob) {
-    screenCnt += 1;
-    let screenFileName = 'screen-' + Date.now() + '-' + screenCnt + '.webm';
-    let screenFileObject = new File([blob], screenFileName, {
-        type: 'video/webm\;codecs=h264'
-    });
-    let formData = new FormData()
-    formData.append("filename", screenFileName);
-    formData.append("file", screenFileObject);
-    $.ajax({
-        type: "POST",
-        url: "uploadFile",
-        data: formData,
-        processData: false,
-        contentType: false,
-    });
-}
-
-let cameraCnt = 0;
-function uploadCameraVideo(blob) {
-    cameraCnt += 1;
-    let cameraFileName = 'camera-' + Date.now() + '-' + cameraCnt + '.webm';
-    let cameraFileObject = new File([blob], cameraFileName, {
-        type: 'video/webm\;codecs=h264'
-    });
-    let formData = new FormData()
-    formData.append("filename", cameraFileName);
-    formData.append("file", cameraFileObject);
-    $.ajax({
-        type: "POST",
-        url: "uploadFile",
-        data: formData,
-        processData: false,
-        contentType: false,
-    });
-}
-
 function stopScreenRecordingCallback() {
+    screenVideo.src = screenVideo.srcObject = null;
+    screenVideo.src = URL.createObjectURL(screenRecorder.getBlob());
+    
+    screenRecorder.screen.stop();
     screenRecorder.destroy();
     screenRecorder = null;
 }
 
 function stopCameraRecordingCallback() {
+    cameraVideo.src = cameraVideo.srcObject = null;
+    cameraVideo.src = URL.createObjectURL(cameraRecorder.getBlob());
+
+    cameraRecorder.camera.stop();
     cameraRecorder.destroy();
     cameraRecorder = null;
 }
@@ -97,26 +71,29 @@ let screenRecorder, cameraRecorder; // globally accessible
 document.getElementById('btn-start-recording').onclick = function () {
     this.disabled = true;
     captureScreen(function (screen) {
+        screenVideo.muted = true;
+        screenVideo.volume = 0;
+        screenVideo.srcObject = screen;
         screenRecorder = RecordRTC(screen, {
             type: 'video',
-            mimeType: 'video/webm\;codecs=h264',
-            timeSlice: 1000,
-            ondataavailable: function (blob) {
-                uploadScreenVideo(blob);
-            }
+            mimeType: 'video/webm\;codecs=h264'
         });
         screenRecorder.startRecording();
+        // release screen on stopRecording
+        screenRecorder.screen = screen;
+
     });
     captureCamera(function (camera) {
+        cameraVideo.muted = true;
+        cameraVideo.volume = 0;
+        cameraVideo.srcObject = camera;
         cameraRecorder = RecordRTC(camera, {
             type: 'video',
-            mimeType: 'video/webm\;codecs=h264',
-            timeSlice: 1000,
-            ondataavailable: function (blob) {
-                uploadCameraVideo(blob);
-            }
+            mimeType: 'video/webm\;codecs=h264'
         });
         cameraRecorder.startRecording();
+        // release camera on stopRecording
+        cameraRecorder.camera = camera;
     });
     document.getElementById('btn-stop-recording').disabled = false;
 };
