@@ -1,0 +1,46 @@
+{{extend './template.html'}}
+
+{{block 'title'}}Monitor{{/block}}
+
+{{block 'content'}}
+<section id="features">
+    <h2 class="display-4 mb-3 text-center p-5">Welcome to monitor.</h2>
+
+    <div class="col-10 container-fluid text-center">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">年级</th>
+                    <th scope="col">学号</th>
+                    <th scope="col">姓名</th>
+                    <th scope="col">专业</th>
+                    <th scope="col">学期</th>
+                    <th scope="col">课号</th>
+                    <th scope="col">题目类别</th>
+                    <th scope="col">上次在线</th>
+                    <th scope="col">是否在线</th>
+                    <th scope="col">屏幕</th>
+                    <th scope="col">摄像头</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{each user}}
+                <tr>
+                    <td>{{$value.stu_grade}}</td>
+                    <td>{{$value.stu_no}}</td>
+                    <td>{{$value.stu_name}}</td>
+                    <td>{{$value.stu_class_sname}}</td>
+                    <td>{{$value.stu_term}}</td>
+                    <td>{{$value.stu_cno}}</td>
+                    <td>{{$value.stu_wtype}}</td>
+                    <td>{{$value.timeSlice}}秒前</td>
+                    <td>{{$value.online}}</td>
+                    <td><a href="/{{$value.stu_no}}/screen" target="_blank">screen</a></td>
+                    <td><a href="/{{$value.stu_no}}/camera" target="_blank">camera</a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{/block}}
