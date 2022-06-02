@@ -1,17 +1,24 @@
 if (!navigator.getDisplayMedia && !navigator.mediaDevices.getDisplayMedia) {
     var error = 'Your browser does NOT support the getDisplayMedia API.';
-    document.getElementById('btn-start-recording').style.display = 'none';
-    document.getElementById('btn-stop-recording').style.display = 'none';
+    document.getElementById('btn-screen-start-recording').style.display = 'none';
+    document.getElementById('btn-camera-start-recording').style.display = 'none';
+    document.getElementById('btn-screen-stop-recording').style.display = 'none';
+    document.getElementById('btn-camera-stop-recording').style.display = 'none';
     throw new Error(error);
 }
 
+const screenAudio = document.getElementById("screenCheck");
+const cameraAudio = document.getElementById("cameraCheck");
+
+let screenWidth, screenHeight, screenRate;
+
 function invokeGetDisplayMedia(success, error) {
     let displaymediastreamconstraints = {
-        audio: true,
+        audio: screenAudio.checked,
         video: {
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { ideal: 15 }
+            width: { ideal: screenWidth },
+            height: { ideal: screenHeight },
+            frameRate: { ideal: screenRate }
         }
     };
 
@@ -26,7 +33,7 @@ function invokeGetDisplayMedia(success, error) {
 function captureScreen(callback) {
     invokeGetDisplayMedia(function (screen) {
         addStreamStopListener(screen, function () {
-            document.getElementById('btn-stop-recording').click();
+            document.getElementById('btn-screen-stop-recording').click();
         });
         callback(screen);
     }, function (error) {
@@ -36,7 +43,7 @@ function captureScreen(callback) {
 }
 
 function captureCamera(callback) {
-    navigator.mediaDevices.getUserMedia({ audio: true, video: { frameRate: { ideal: 15 } } }).then(function (camera) {
+    navigator.mediaDevices.getUserMedia({ audio: cameraAudio.checked, video: { frameRate: { ideal: screenRate } } }).then(function (camera) {
         callback(camera);
     }).catch(function (error) {
         alert('Unable to capture your camera. Please check console logs.');
@@ -47,12 +54,13 @@ function captureCamera(callback) {
 let screenCnt = 0;
 function uploadScreenVideo(blob) {
     screenCnt += 1;
-    let screenFileName = 'screen-' + Date.now() + '-' + screenCnt + '.webm';
-    let screenFileObject = new File([blob], screenFileName, {
+    let screenFileType = 'screen';
+    let screenFileObject = new File([blob], screenFileType, {
         type: 'video/webm\;codecs=h264'
     });
-    let formData = new FormData()
-    formData.append("filename", screenFileName);
+    let formData = new FormData();
+    formData.append("filetime", Date.now());
+    formData.append("filetype", screenFileType);
     formData.append("file", screenFileObject);
     $.ajax({
         type: "POST",
@@ -66,12 +74,13 @@ function uploadScreenVideo(blob) {
 let cameraCnt = 0;
 function uploadCameraVideo(blob) {
     cameraCnt += 1;
-    let cameraFileName = 'camera-' + Date.now() + '-' + cameraCnt + '.webm';
-    let cameraFileObject = new File([blob], cameraFileName, {
+    let cameraFileType = 'camera';
+    let cameraFileObject = new File([blob], cameraFileType, {
         type: 'video/webm\;codecs=h264'
     });
-    let formData = new FormData()
-    formData.append("filename", cameraFileName);
+    let formData = new FormData();
+    formData.append("filetime", Date.now());
+    formData.append("filetype", cameraFileType);
     formData.append("file", cameraFileObject);
     $.ajax({
         type: "POST",
@@ -82,50 +91,68 @@ function uploadCameraVideo(blob) {
     });
 }
 
+let screenRecorder, cameraRecorder; // globally accessible
+
 function stopScreenRecordingCallback() {
+    uploadScreenVideo(screenRecorder.getBlob());
     screenRecorder.destroy();
     screenRecorder = null;
 }
 
 function stopCameraRecordingCallback() {
+    uploadCameraVideo(cameraRecorder.getBlob());
     cameraRecorder.destroy();
     cameraRecorder = null;
 }
 
-let screenRecorder, cameraRecorder; // globally accessible
+let screenIntervalID, cameraIntervalID;
 
-document.getElementById('btn-start-recording').onclick = function () {
+document.getElementById('btn-screen-start-recording').onclick = function () {
     this.disabled = true;
     captureScreen(function (screen) {
         screenRecorder = RecordRTC(screen, {
             type: 'video',
-            mimeType: 'video/webm\;codecs=h264',
-            timeSlice: 1000,
-            ondataavailable: function (blob) {
-                uploadScreenVideo(blob);
-            }
+            mimeType: 'video/webm\;codecs=h264'
         });
         screenRecorder.startRecording();
+        screenIntervalID = setInterval(() => {
+            screenRecorder.stopRecording();
+            uploadScreenVideo(screenRecorder.getBlob());
+            screenRecorder.startRecording();
+        }, 3000);
     });
+    document.getElementById('btn-screen-stop-recording').disabled = false;
+};
+
+document.getElementById('btn-camera-start-recording').onclick = function () {
+    this.disabled = true;
     captureCamera(function (camera) {
         cameraRecorder = RecordRTC(camera, {
             type: 'video',
-            mimeType: 'video/webm\;codecs=h264',
-            timeSlice: 1000,
-            ondataavailable: function (blob) {
-                uploadCameraVideo(blob);
-            }
+            mimeType: 'video/webm\;codecs=h264'
         });
         cameraRecorder.startRecording();
+        cameraIntervalID = setInterval(() => {
+            cameraRecorder.stopRecording();
+            uploadCameraVideo(cameraRecorder.getBlob());
+            cameraRecorder.startRecording();
+        }, 3000);
     });
-    document.getElementById('btn-stop-recording').disabled = false;
+    document.getElementById('btn-camera-stop-recording').disabled = false;
 };
 
-document.getElementById('btn-stop-recording').onclick = function () {
+document.getElementById('btn-screen-stop-recording').onclick = function () {
     this.disabled = true;
+    clearInterval(screenIntervalID);
     screenRecorder.stopRecording(stopScreenRecordingCallback);
+    document.getElementById('btn-screen-start-recording').disabled = false;
+};
+ 
+document.getElementById('btn-camera-stop-recording').onclick = function () {
+    this.disabled = true;
+    clearInterval(cameraIntervalID);
     cameraRecorder.stopRecording(stopCameraRecordingCallback);
-    document.getElementById('btn-start-recording').disabled = false;
+    document.getElementById('btn-camera-start-recording').disabled = false;
 };
 
 function addStreamStopListener(stream, callback) {
@@ -148,3 +175,5 @@ function addStreamStopListener(stream, callback) {
         }, false);
     });
 }
+
+screenWidth = 1920, screenHeight = 1080, screenRate = 15;

@@ -6,16 +6,36 @@
 <section id="features">
     {{ if sessionUser }}
     <div class="display-5 mb-3 text-center p-5">
-        You are in the exam
-        <button class="btn btn-warning btn-lg">
-            {{ sessionUser.exam }}
-        </button>
+        You are in the exam.
     </div>
     {{ /if }}
+
     <div class="container-fluid text-center p-5">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" style="text-align:center" id="screenCheck">
+            <label class="form-check-label" for="screenCheck">
+                Screen Audio
+            </label>
+        </div>
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary btn-lg" id="btn-start-recording">Start Recording</button>
-            <button type="button" class="btn btn-secondary btn-lg" id="btn-stop-recording" disabled>Stop
+            <button type="button" class="btn btn-primary btn-lg" id="btn-screen-start-recording">Start Screen
+                Recording</button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-screen-stop-recording" disabled>Stop Screen
+                Recording</button>
+        </div>
+    </div>
+
+    <div class="container-fluid text-center p-5">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" style="text-align:center" id="cameraCheck">
+            <label class="form-check-label" for="cameraCheck">
+                Camera Audio
+            </label>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-camera-start-recording">Start Camera
+                Recording</button>
+            <button type="button" class="btn btn-secondary btn-lg" id="btn-camera-stop-recording" disabled>Stop Camera
                 Recording</button>
         </div>
     </div>
@@ -23,7 +43,7 @@
 {{/block}}
 
 {{block 'script'}}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
 <script src="../node_modules/recordrtc/RecordRTC.js"></script>
 <script src="../controller.js"></script>
 {{/block}}
