@@ -12,7 +12,8 @@
 
     <div class="container-fluid text-center p-5">
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" style="text-align:center" id="screenCheck">
+            <input class="form-check-input position-absolute start-40" type="checkbox" id="screenCheck"
+                checked="checked">
             <label class="form-check-label" for="screenCheck">
                 Screen Audio
             </label>
@@ -27,7 +28,8 @@
 
     <div class="container-fluid text-center p-5">
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" style="text-align:center" id="cameraCheck">
+            <input class="form-check-input position-absolute start-40" type="checkbox" id="cameraCheck"
+                checked="checked">
             <label class="form-check-label" for="cameraCheck">
                 Camera Audio
             </label>
@@ -45,5 +47,7 @@
 {{block 'script'}}
 <script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
 <script src="../node_modules/recordrtc/RecordRTC.js"></script>
+<script src="../js/fix-webm-duration.js"></script>
 <script src="../controller.js"></script>
+
 {{/block}}

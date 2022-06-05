@@ -51,12 +51,10 @@ function captureCamera(callback) {
     });
 }
 
-let screenCnt = 0;
-function uploadScreenVideo(blob) {
-    screenCnt += 1;
+function uploadScreenVideo(e) {
     let screenFileType = 'screen';
-    let screenFileObject = new File([blob], screenFileType, {
-        type: 'video/webm\;codecs=h264'
+    let screenFileObject = new File([e.data], screenFileType, {
+        type: screenRecorder.mimeType
     });
     let formData = new FormData();
     formData.append("filetime", Date.now());
@@ -71,12 +69,10 @@ function uploadScreenVideo(blob) {
     });
 }
 
-let cameraCnt = 0;
-function uploadCameraVideo(blob) {
-    cameraCnt += 1;
+function uploadCameraVideo(e) {
     let cameraFileType = 'camera';
-    let cameraFileObject = new File([blob], cameraFileType, {
-        type: 'video/webm\;codecs=h264'
+    let cameraFileObject = new File([e.data], cameraFileType, {
+        type: cameraRecorder.mimeType
     });
     let formData = new FormData();
     formData.append("filetime", Date.now());
@@ -92,34 +88,21 @@ function uploadCameraVideo(blob) {
 }
 
 let screenRecorder, cameraRecorder; // globally accessible
-
-function stopScreenRecordingCallback() {
-    uploadScreenVideo(screenRecorder.getBlob());
-    screenRecorder.destroy();
-    screenRecorder = null;
-}
-
-function stopCameraRecordingCallback() {
-    uploadCameraVideo(cameraRecorder.getBlob());
-    cameraRecorder.destroy();
-    cameraRecorder = null;
-}
-
 let screenIntervalID, cameraIntervalID;
 
 document.getElementById('btn-screen-start-recording').onclick = function () {
     this.disabled = true;
     captureScreen(function (screen) {
-        screenRecorder = RecordRTC(screen, {
-            type: 'video',
-            mimeType: 'video/webm\;codecs=h264'
+        screenRecorder = new MediaRecorder(screen, {
+            videoBitsPerSecond: 1280000,
+            mimeType: 'video/webm'
         });
-        screenRecorder.startRecording();
+        screenRecorder.ondataavailable = uploadScreenVideo;
         screenIntervalID = setInterval(() => {
-            screenRecorder.stopRecording();
-            uploadScreenVideo(screenRecorder.getBlob());
-            screenRecorder.startRecording();
+            screenRecorder.stop();
+            screenRecorder.start();
         }, 3000);
+        screenRecorder.start();
     });
     document.getElementById('btn-screen-stop-recording').disabled = false;
 };
@@ -127,16 +110,16 @@ document.getElementById('btn-screen-start-recording').onclick = function () {
 document.getElementById('btn-camera-start-recording').onclick = function () {
     this.disabled = true;
     captureCamera(function (camera) {
-        cameraRecorder = RecordRTC(camera, {
-            type: 'video',
-            mimeType: 'video/webm\;codecs=h264'
+        cameraRecorder = new MediaRecorder(camera, {
+            videoBitsPerSecond: 128000,
+            mimeType: 'video/webm'
         });
-        cameraRecorder.startRecording();
+        cameraRecorder.ondataavailable = uploadCameraVideo;
         cameraIntervalID = setInterval(() => {
-            cameraRecorder.stopRecording();
-            uploadCameraVideo(cameraRecorder.getBlob());
-            cameraRecorder.startRecording();
+            cameraRecorder.stop();
+            cameraRecorder.start();
         }, 3000);
+        cameraRecorder.start();
     });
     document.getElementById('btn-camera-stop-recording').disabled = false;
 };
@@ -144,14 +127,14 @@ document.getElementById('btn-camera-start-recording').onclick = function () {
 document.getElementById('btn-screen-stop-recording').onclick = function () {
     this.disabled = true;
     clearInterval(screenIntervalID);
-    screenRecorder.stopRecording(stopScreenRecordingCallback);
+    screenRecorder.stop();
     document.getElementById('btn-screen-start-recording').disabled = false;
 };
- 
+
 document.getElementById('btn-camera-stop-recording').onclick = function () {
     this.disabled = true;
     clearInterval(cameraIntervalID);
-    cameraRecorder.stopRecording(stopCameraRecordingCallback);
+    cameraRecorder.stop();
     document.getElementById('btn-camera-start-recording').disabled = false;
 };
 

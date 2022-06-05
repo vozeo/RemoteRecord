@@ -6,6 +6,11 @@
 <section id="features">
     <h2 class="display-4 mb-3 text-center p-5">Welcome to monitor.</h2>
 
+    <div class="container-fluid text-center pb-4">
+        <div class="text-center">请在所有视频录制结束之后点击下方按钮处理视频。</div>
+        <button type="button" class="btn btn-danger text-center" id="bind-video">处理视频</button>
+    </div>
+    
     <div class="col-10 container-fluid text-center">
         <table class="table">
             <thead>
@@ -19,8 +24,8 @@
                     <th scope="col">题目类别</th>
                     <th scope="col">上次在线</th>
                     <th scope="col">是否在线</th>
-                    <th scope="col">屏幕</th>
-                    <th scope="col">摄像头</th>
+                    <th scope="col">正在录制</th>
+                    <th scope="col">录制结束</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,8 +40,14 @@
                     <td>{{$value.stu_wtype}}</td>
                     <td>{{$value.timeSlice}}秒前</td>
                     <td>{{$value.online}}</td>
-                    <td><a href="/{{$value.stu_no}}/screen" target="_blank">screen</a></td>
-                    <td><a href="/{{$value.stu_no}}/camera" target="_blank">camera</a></td>
+                    <td>
+                        <a href="/{{$value.stu_no}}/screen" target="_blank">screen</a>
+                        <a href="/{{$value.stu_no}}/camera" target="_blank">camera</a>
+                    </td>
+                    <td>
+                        <a href="final/{{$value.stu_no}}/screen" target="_blank">screen</a>
+                        <a href="final/{{$value.stu_no}}/camera" target="_blank">camera</a>
+                    </td>
                 </tr>
                 {{/each}}
             </tbody>
@@ -44,3 +55,15 @@
     </div>
 </section>
 {{/block}}
+
+{{ block 'script' }}
+<script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
+<script>
+    $('#bind-video').click(function () {
+        $.post("/bindvideo", function (data, status) {
+            document.getElementById('bind-video').disabled = true;
+            alert("后台正在进行视频转码处理，请不要重复点击此按钮。\n过程可能持续几秒钟至几分钟，请耐心等待。\n直接点击录制结束播放按钮即可查看是否处理完成。");
+        });
+    });
+</script>
+{{ /block }}

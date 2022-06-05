@@ -162,8 +162,44 @@ app.get('/:userid/:videotype', auth, opAuth, async (req, res, next) => {
     res.render('video.html', { userid: req.params.userid, videotype: req.params.videotype, number: Date.now() });
 });
 
-app.get('/video/:userid/:videotype/*', auth, opAuth, function (req, res) {
-    const path = config['root-dir']['path'] + '/u' + req.params.userid + '/' + req.params.videotype + '/' + req.params.videotype + '.webm';
+app.get('/final/:userid/:videotype', auth, opAuth, async (req, res, next) => {
+    res.render('final-video.html', { userid: req.params.userid, videotype: req.params.videotype, number: Date.now() });
+});
+
+const exec = require('child_process').exec;
+
+app.post('/bindvideo', auth, opAuth, async (req, res, next) => {
+    let nowTime = Date.now();
+    let shellPath = __dirname + '/../server/';
+    for (var i in allUsers) {
+        finalVideoTime['screen'] = finalVideoTime['camera'] = nowTime;
+        let user = allUsers[i];
+        let userPath = config['root-dir']['path'] + '/u' + user.stu_no + '/';
+        let screenName = 'screen' + nowTime + '.mp4';
+        let cameraName = 'camera' + nowTime + '.mp4';
+        let execShell = `cd ${shellPath} && . ./manage.sh ${userPath} ${cameraName} ${screenName}`;
+        console.log(execShell);
+        exec(execShell, function (error, stdout, stderr) {
+            console.log(stdout);
+        });
+    }
+    res.status(200).json({
+        failed: 0,
+        message: "Success!"
+    });
+});
+
+let finalVideoTime = {};
+finalVideoTime['screen'] = 0;
+finalVideoTime['camera'] = 0;
+
+app.get('/video/:userid/:videotype/:videoparam/*', auth, opAuth, function (req, res) {
+    let path = "";
+    if (req.params.videoparam == 'final') {
+        path = config['root-dir']['path'] + '/u' + req.params.userid + '/' + req.params.videotype + '/' + req.params.videotype + finalVideoTime[req.params.videotype] + '.mp4';
+    } else {
+        path = config['root-dir']['path'] + '/u' + req.params.userid + '/' + req.params.videotype + '/' + req.params.videotype + '.webm';
+    }
     if (!fs.existsSync(path)) {
         res.status(404).send('File does not exist!');
         return;
@@ -313,10 +349,12 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         let date = new Date(parseInt(req.body.filetime));
-        allUsers[req.session.user.stu_no].lastTime = Date.now();
+        if (req.session.user.stu_no in allUsers)
+            allUsers[req.session.user.stu_no].lastTime = Date.now();
         cb(null, 'u' + req.session.user.stu_no + '-' + req.session.user.stu_name + '-' + req.body.filetype
-            + '-' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate() + '-' + date.getHours()
-            + '-' + date.getMinutes() + '-' + date.getSeconds() + '.webm');
+            + '-' + date.getFullYear().toString().padStart(2, '0') + '-' + String(date.getMonth() + 1).padStart(2, '0')
+            + '-' + date.getDate().toString().padStart(2, '0') + '-' + date.getHours().toString().padStart(2, '0')
+            + '-' + date.getMinutes().toString().padStart(2, '0') + '-' + date.getSeconds().toString().padStart(2, '0') + '.webm');
     }
 });
 
@@ -325,20 +363,24 @@ function deleteFile(filePath) {
     if (fs.existsSync(filePath)) {
         const files = fs.readdirSync(filePath);
         files.forEach((file) => {
-            fs.unlinkSync(`${filePath}/${file}`);
+            if (file == 'screen.webm' || file == 'camera.webm') {
+                fs.unlinkSync(`${filePath}/${file}`);
+            }
         })
     }
 }
 
+const syncExec = require('child_process').execSync;
 
 function moveFile(srcPath, dstPath, savePath, dstName) {
     if (fs.existsSync(srcPath)) {
         const files = fs.readdirSync(srcPath)
-        files.forEach((file) => {
+        if (files.length > 0) {
             deleteFile(dstPath);
-            fs.copyFileSync(`${srcPath}/${file}`, `${savePath}/${file}`);
-            fs.renameSync(`${srcPath}/${file}`, `${dstPath}/${dstName}`);
-        })
+            syncExec(`convmv -f UTF-8 -t GBK --notest -r ${srcPath}`);
+            syncExec(`/bin/cp -rf ${srcPath}/. ${savePath}`);
+            syncExec(`cd ${srcPath} && for file in $(ls); do mv $file ${dstPath}/${dstName}; done`);
+        }
     }
 }
 

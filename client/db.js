@@ -3,7 +3,7 @@ const mysql = require('mysql')
 const config = {
     database: 'user',
     user: 'root',
-    password: 'abc123',
+    password: 'root123',
 }
 
 // [], {}, [{}, id]

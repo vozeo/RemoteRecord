@@ -5,10 +5,15 @@
 {{block 'content'}}
 <section id="features">
     <h2 class="display-4 mb-3 text-center p-5">Welcome to remote record.</h2>
-    <!-- <div class="text-center p-5">测试界面可以看到录屏结果，考试界面看不到任何内容，点击上面可以注册账号和登录。</div> -->
-    <div class="container-fluid text-center p-5">
-        <a type="button" class="btn btn-success btn-lg m-5" href="/recordtest">Test Record</a>
-        <a type="button" class="btn btn-danger btn-lg m-5" href="/record">Exam record</a>
-    </div>
+    {{ if sessionUser }}
+        <div class="text-center p-5">测试界面可以看到录屏结果，考试界面看不到任何内容。</div>
+        <div class="container-fluid text-center p-5">
+            <a type="button" class="btn btn-success btn-lg m-5" href="/recordtest">Test Record</a>
+            <a type="button" class="btn btn-danger btn-lg m-5" href="/record">Exam record</a>
+        </div>
+    {{ else }}
+        <h2 class="display-4 mb-3 text-center p-5">Please log in.</h2>
+    {{ /if }}
+
 </section>
 {{/block}}
