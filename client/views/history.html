@@ -1,0 +1,62 @@
+{{extend './template.html'}}
+
+{{block 'title'}}历史视频{{/block}}
+
+{{block 'content'}}
+<section id="features">
+    <h2 class="display-4 mb-3 text-center p-5">历史视频</h2>
+
+    <div class="col-10 container-fluid text-center">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">序号</th>
+                    <th scope="col">年级</th>
+                    <th scope="col">学号</th>
+                    <th scope="col">姓名</th>
+                    <th scope="col">专业</th>
+                    <th scope="col">屏幕录制</th>
+                    <th scope="col">摄像头录制</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                {{each user}}
+                <tr>
+                    <td>{{$index + 1}}</td>
+                    <td>{{$value.stu_grade}}</td>
+                    <td>{{$value.stu_no}}</td>
+                    <td>{{$value.stu_name}}</td>
+                    <td>{{$value.stu_class_sname}}</td>
+                    <td id="{{$value.stu_no}}-0"></td>
+                    <td id="{{$value.stu_no}}-1"></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{/block}}
+
+{{ block 'script' }}
+<script src="../vendor/axios/axios.min.js"></script>
+<script>
+    axios.get('/historyrecord').then((res) => {
+        let history = res.data;
+        for (let i in history) {
+            let td = document.getElementById(i);
+            td.innerHTML = '';
+            for (let j in history[i]) {
+                let a = document.createElement('a');
+                a.href = '/video/' + history[i][j] + '/' + Date.now().toString();
+                a.target = '_blank';
+                a.innerText = history[i][j];
+                a.className = 'p-1'
+                td.appendChild(a);
+                td.appendChild(document.createElement('br'));
+            }
+        }
+    });
+
+</script>
+
+{{ /block }}

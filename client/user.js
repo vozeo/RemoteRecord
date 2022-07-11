@@ -10,6 +10,11 @@ const user = {
         return await db(sql);
     },
 
+    getOps: async () => {
+        const sql = "SELECT * FROM student WHERE stu_userlevel = '1' AND stu_enable = '1'";
+        return await db(sql);
+    },
+
     // 根据 id 获取用户信息
     getUserById: async (id) => {
         const sql = "SELECT * FROM student WHERE stu_no = ? AND stu_enable = '1'";

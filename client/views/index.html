@@ -1,19 +1,20 @@
 {{extend './template.html'}}
 
-{{block 'title'}}Index{{/block}}
+{{block 'title'}}主页{{/block}}
 
 {{block 'content'}}
 <section id="features">
-    <h2 class="display-4 mb-3 text-center p-5">Welcome to remote record.</h2>
+    <h2 class="display-4 mb-3 text-center p-5">如愿以偿，前程似锦</h2>
     {{ if sessionUser }}
-        <div class="text-center p-5">测试界面可以看到录屏结果，考试界面看不到任何内容。</div>
-        <div class="container-fluid text-center p-5">
-            <a type="button" class="btn btn-success btn-lg m-5" href="/recordtest">Test Record</a>
-            <a type="button" class="btn btn-danger btn-lg m-5" href="/record">Exam record</a>
-        </div>
-    {{ else }}
-        <h2 class="display-4 mb-3 text-center p-5">Please log in.</h2>
+    <div class="container-fluid text-center p-5">
+        <a style="display: none;" type="button" class="btn btn-success btn-lg m-5" href="/recordtest">测试设备</a>
+        {{ if sessionUser.stu_userlevel == '0'}}
+        <a type="button" class="btn btn-danger btn-lg" href="/record">进入录制</a>
+        {{ else }}
+        <a type="button" class="btn btn-danger btn-lg" href="/monitor">进入监控</a>
+        <a style="display: none;" type="button" class="btn btn-info btn-lg" href="/history" target="_blank">历史视频</a>
+        {{ /if }}
+    </div>
     {{ /if }}
-
 </section>
 {{/block}}

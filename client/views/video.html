@@ -2,20 +2,55 @@
 <html lang="en">
 
 <head>
-    <title>Remote record | Video {{userid}} {{videotype}}</title>
+    <title>{{userid}}{{username}} {{videotype}}</title>
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
 </head>
 
 
 <body width="100%" height="100%">
-    <video id="videoPlayer" width="100%" height="100%" controls autoplay>
-        <source src="/video/{{userid}}/{{videotype}}/live/{{number}}" type="video/webm">
+    <video id="videoPlayer" width="100%" height="100%" controls autoplay muted>
     </video>
+    <div id="peerId" style="display:none;">{{ peerid }}</div>
 </body>
 
+<script src="../js/webrtc.js"></script>
+<script src="../vendor/axios/axios.min.js"></script>
+<script src="../js/socket.io.js"></script>
 <script type="text/javascript">
-    function reloadPage() {
-        window.location.reload(true);
-    }
-    setInterval(reloadPage, 3500);
+
+    axios.get('/selfinformation').then((res) => {
+        const sessionUser = res.data[0];
+        let urlArray = window.location.href.split('/');
+        let videotype = urlArray[urlArray.length - 1];
+        let userid = urlArray[urlArray.length - 2];
+        const socket = io("https://" + document.domain + ":7080", { rejectUnauthorized: false });
+        socket.on("connect", () => {
+            socket.emit('watch', [sessionUser.stu_no, userid, (videotype == 'screen') ? 0 : 1]);
+        });
+        let peerId = userid + videotype;
+        const peer = new Peer({
+            host: document.domain,
+            port: "7080",
+            path: "/webrtc",
+            secure: true,
+            config: {
+                'iceServers': [
+                    { url: 'turn:' + document.domain + ':7100', username: 'S9TvhA', credential: '5jc7PPiW' }
+                ]
+            }
+        });
+        peer.on('open', function (call) {
+            peer.connect(peerId);
+        });
+        peer.on('call', function (call) {
+            call.on("stream", function (stream) {
+                document.getElementById("videoPlayer").srcObject = stream;
+                document.getElementById('videoPlayer').play();
+            });
+            call.answer(null);
+        });
+    });
+
+
+
 </script>

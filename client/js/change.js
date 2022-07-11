@@ -2,8 +2,6 @@
 (function ($) {
     "use strict";
 
-    /*==================================================================
-    [ Validate ]*/
     var input = $('.validate-input .input100');
 
     $('#loginbutton').on('click', function () {
@@ -17,6 +15,12 @@
         }
 
         if (check) {
+            let newpassword = $("#newpassword").val();
+            let confirmpassword = $("#confirmpassword").val();
+            if (newpassword.match(/[^a-zA-Z0-9*=-_#$%!]+/) || confirmpassword.match(/[^a-zA-Z0-9*=-_#$%!]+/)) {
+                alert('密码不能包含除数字、小写字母、大写字母或 * = - _ # $ % ! 字符以外的其他字符!');
+                return;
+            }
             $.ajax({
                 url: 'changepassword',
                 type: 'POST',
@@ -24,12 +28,15 @@
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
                     oldpassword: $("#oldpassword").val(),
-                    newpassword: $("#newpassword").val()
+                    newpassword: newpassword,
+                    confirmpassword: confirmpassword,
                 }),
                 dataType: "json",
                 success: function (data) {
                     if (data['failed']) {
                         alert(data['message']);
+                    } else {
+                        setInterval(window.location.replace('/'), 1000);
                     }
                 },
             });

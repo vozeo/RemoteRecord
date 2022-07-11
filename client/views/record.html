@@ -1,53 +1,41 @@
 {{extend './template.html'}}
 
-{{block 'title'}}Record{{/block}}
+{{block 'title'}}考试录制{{/block}}
 
 {{block 'content'}}
 <section id="features">
-    {{ if sessionUser }}
-    <div class="display-5 mb-3 text-center p-5">
-        You are in the exam.
-    </div>
-    {{ /if }}
 
     <div class="container-fluid text-center p-5">
-        <div class="form-check">
-            <input class="form-check-input position-absolute start-40" type="checkbox" id="screenCheck"
-                checked="checked">
-            <label class="form-check-label" for="screenCheck">
-                Screen Audio
-            </label>
+        <div class="alert alert-warning">
+            服务器连接状态：
+            <button id="online-state-btn" class="btn btn-outline-dark">未连接</button>
         </div>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary btn-lg" id="btn-screen-start-recording">Start Screen
-                Recording</button>
-            <button type="button" class="btn btn-secondary btn-lg" id="btn-screen-stop-recording" disabled>Stop Screen
-                Recording</button>
+        <div id="screen-state" class="alert alert-info" style="display: none;">
+            屏幕录制状态：
+            <button id="screen-state-btn" class="btn btn-outline-dark">未录制</button>
+        </div>
+        <div id="camera-state" class="alert alert-success" style="display: none;">
+            摄像头录制状态：
+            <button id="camera-state-btn" class="btn btn-outline-dark">未录制</button>
         </div>
     </div>
 
-    <div class="container-fluid text-center p-5">
-        <div class="form-check">
-            <input class="form-check-input position-absolute start-40" type="checkbox" id="cameraCheck"
-                checked="checked">
-            <label class="form-check-label" for="cameraCheck">
-                Camera Audio
-            </label>
-        </div>
+    <div id="screen-container" class="container-fluid text-center p-3" style="display: none;">
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary btn-lg" id="btn-camera-start-recording">Start Camera
-                Recording</button>
-            <button type="button" class="btn btn-secondary btn-lg" id="btn-camera-stop-recording" disabled>Stop Camera
-                Recording</button>
+            <button type="button" class="btn btn-primary btn-lg" id="btn-screen-recording">开始屏幕录制</button>
+        </div>
+    </div>
+    <div id="camera-container" class="container-fluid text-center p-3" style="display: none;">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-camera-recording">开始摄像头录制</button>
         </div>
     </div>
 </section>
 {{/block}}
 
 {{block 'script'}}
-<script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
-<script src="../node_modules/recordrtc/RecordRTC.js"></script>
-<script src="../js/fix-webm-duration.js"></script>
+<script src="../js/webrtc.js"></script>
+<script src="../vendor/axios/axios.min.js"></script>
+<script src="../js/socket.io.js"></script>
 <script src="../controller.js"></script>
-
 {{/block}}

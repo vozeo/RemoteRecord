@@ -1,53 +1,50 @@
 {{extend './template.html'}}
 
-{{block 'title'}}Monitor{{/block}}
+{{block 'title'}}监控界面{{/block}}
 
 {{block 'content'}}
 <section id="features">
-    <h2 class="display-4 mb-3 text-center p-5">Welcome to monitor.</h2>
-
-    <div class="container-fluid text-center pb-4">
-        <div class="text-center">请在所有视频录制结束之后点击下方按钮处理视频。</div>
-        <button type="button" class="btn btn-danger text-center" id="bind-video">处理视频</button>
+    <div class="container-fluid text-center px-5 py-3">
+        <div class="alert alert-warning">
+            监控端连接状态：
+            <button id="online-state-btn" class="btn btn-outline-dark">未连接</button>
+        </div>
     </div>
-    
+
+    <div class="container-fluid text-center mb-4">
+        <button class="btn btn-info" id="start-btn">全体开始录制</button>
+        <button class="btn btn-danger" id="finish-btn">全体停止录制</button>
+    </div>
+
     <div class="col-10 container-fluid text-center">
         <table class="table">
             <thead>
                 <tr>
+                    <th scope="col">序号</th>
                     <th scope="col">年级</th>
                     <th scope="col">学号</th>
                     <th scope="col">姓名</th>
                     <th scope="col">专业</th>
-                    <th scope="col">学期</th>
-                    <th scope="col">课号</th>
-                    <th scope="col">题目类别</th>
-                    <th scope="col">上次在线</th>
                     <th scope="col">是否在线</th>
-                    <th scope="col">正在录制</th>
-                    <th scope="col">录制结束</th>
+                    <th scope="col">屏幕录制</th>
+                    <th scope="col">实时查看</th>
+                    <th scope="col">监考</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="table-body">
                 {{each user}}
                 <tr>
+                    <td>{{$index + 1}}</td>
                     <td>{{$value.stu_grade}}</td>
                     <td>{{$value.stu_no}}</td>
                     <td>{{$value.stu_name}}</td>
                     <td>{{$value.stu_class_sname}}</td>
-                    <td>{{$value.stu_term}}</td>
-                    <td>{{$value.stu_cno}}</td>
-                    <td>{{$value.stu_wtype}}</td>
-                    <td>{{$value.timeSlice}}秒前</td>
-                    <td>{{$value.online}}</td>
-                    <td>
-                        <a href="/{{$value.stu_no}}/screen" target="_blank">screen</a>
-                        <a href="/{{$value.stu_no}}/camera" target="_blank">camera</a>
+                    <td id="{{$value.stu_no}}-0">不在线</td>
+                    <td id="{{$value.stu_no}}-1">未录制</td>
+                    <td id="{{$value.stu_no}}-4">
+                        <span href="/{{$value.stu_no}}/screen" target="_blank">屏幕</span>
                     </td>
-                    <td>
-                        <a href="final/{{$value.stu_no}}/screen" target="_blank">screen</a>
-                        <a href="final/{{$value.stu_no}}/camera" target="_blank">camera</a>
-                    </td>
+                    <td id="{{$value.stu_no}}-3">/</td>
                 </tr>
                 {{/each}}
             </tbody>
@@ -58,12 +55,90 @@
 
 {{ block 'script' }}
 <script src="../vendor/jquery/jquery-3.6.0.min.js"></script>
+<script src="../vendor/axios/axios.min.js"></script>
+<script src="../js/socket.io.js"></script>
 <script>
-    $('#bind-video').click(function () {
-        $.post("/bindvideo", function (data, status) {
-            document.getElementById('bind-video').disabled = true;
-            alert("后台正在进行视频转码处理，请不要重复点击此按钮。\n过程可能持续几秒钟至几分钟，请耐心等待。\n直接点击录制结束播放按钮即可查看是否处理完成。");
+    axios.get('/selfinformation').then((res) => {
+        const sessionUser = res.data[0];
+        const socket = io("https://" + document.domain + ":7080", { rejectUnauthorized: false });
+        socket.on("connect", () => {
+            console.log(socket.id);
+            socket.emit('message', [sessionUser.stu_no], () => {
+                document.getElementById('online-state-btn').innerText = '已连接';
+            });
+        });
+
+        socket.on('state', (data) => {
+            for (let i in data) {
+                let stu = data[i];
+                let td = document.getElementById(stu.stu_no + '-0');
+                let a = document.getElementById(stu.stu_no + '-4');
+                a.innerHTML = '';
+                if (stu.online[0] == true) {
+                    td.innerText = '在线';
+                    td.style = 'color:white; font-weight:bolder;';
+                    td.className = "bg-success";
+                } else {
+                    td.innerText = '不在线';
+                    td.style = 'color:black; font-weight:normal;';
+                    td.className = "";
+                }
+                for (let j = 1; j <= 1; j += 1) {
+                    td = document.getElementById(stu.stu_no + '-' + j.toString());
+                    if (stu.online[j] == true) {
+                        td.innerText = '录制中';
+                        td.style = 'color:green;';
+                        let newA = document.createElement('a');
+                        newA.href = '/' + stu.stu_no + '/screen';
+                        newA.target = '_blank';
+                        newA.innerText = '屏幕';
+                        a.appendChild(newA);
+                    } else {
+                        td.innerText = '未录制'
+                        td.style = 'color:black;';
+                        let p = document.createElement('span');
+                        p.innerText = '屏幕';
+                        a.appendChild(p);
+                    }
+
+                }
+                if (Object.keys(stu.watchList).length > 0) {
+                    td = document.getElementById(stu.stu_no + '-3');
+                    td.innerHTML = '';
+                    for (let j in stu.watchList) {
+                        let span = document.createElement('span');
+                        span.innerText = stu.watchList[j].stu_no + stu.watchList[j].stu_name + ' ';
+                        td.appendChild(span);
+                    }
+                } else {
+                    td = document.getElementById(stu.stu_no + '-3');
+                    td.innerText = '/';
+                }
+            }
+        });
+
+        $('#start-btn').click(function () {
+            let result = confirm('是否让所有考生开始录制？\n已经开始录制的考生不受影响。');
+            if (result) {
+                socket.emit('instr', 1);
+                alert("所有考生开始录制成功！");
+            }
+        });
+
+        $('#finish-btn').click(function () {
+            let result = prompt('是否让所有考生停止录制？\n请输入“全体停止录制”后继续。\n已经停止录制的考生不受影响。\n停止后后台会自动处理视频。');
+            if (result == '全体停止录制') {
+                socket.emit('instr', 0);
+                alert("所有考生停止录制成功！\n点击确定后处理视频。");
+                $.post("/bindvideo", function (data, status) {
+                    alert("处理完成！");
+                });
+            } else {
+                alert("您的输入有误，录制未停止。");
+            }
         });
     });
+
 </script>
+
 {{ /block }}
