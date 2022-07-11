@@ -73,4 +73,4 @@ node app.js
 
 [MIT](https://opensource.org/licenses/MIT)
 
-Copyright (c) 2022-present, Vozeo
+Copyright (c) 2022-present
